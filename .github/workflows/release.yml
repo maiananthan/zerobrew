@@ -2,14 +2,11 @@ name: release
 
 on:
   push:
+    branches:
+      - main-fork
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to release (must be an existing tag, e.g. v1.0.0)'
-        required: false
-        type: string
 
 permissions:
   contents: write
@@ -26,26 +23,13 @@ jobs:
   build:
     name: Build ${{ matrix.artifact_name }}
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'lucasgelfond/zerobrew'
     strategy:
       fail-fast: false
       matrix:
         include:
-          - target: aarch64-apple-darwin
-            os: macos-latest
-            artifact_name: zb-darwin-arm64
-
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            artifact_name: zb-darwin-x64
-
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-            artifact_name: zb-linux-x64
-
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-24.04-arm
-            artifact_name: zb-linux-arm64
+            os: ubuntu-22.04
+            artifact_name: zb-x86_64-unknown-linux-gnu
 
     steps:
       - uses: actions/checkout@v4
@@ -73,22 +57,6 @@ jobs:
           path: ${{ matrix.artifact_name }}
           retention-days: 7
 
-  release:
-    name: Create GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: assets
-          pattern: "zb-*"
-          merge-multiple: true
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: assets/*
-          generate_release_notes: true
-          draft: false
+#
+# end of file
+#
